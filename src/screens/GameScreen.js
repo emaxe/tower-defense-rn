@@ -115,16 +115,7 @@ export default function GameScreen({ onNavigate }) {
       </View>
 
       <View style={styles.hudOverlay} pointerEvents="box-none">
-        <HUD
-          gold={uiState.gold}
-          lives={uiState.lives}
-          wave={uiState.wave}
-          maxWave={uiState.maxWave}
-          onPause={handlePause}
-          onSpeed={handleSpeed}
-          isPaused={uiState.isPaused}
-          speed={uiState.speed}
-        />
+        <HUD gameState={uiState} />
       </View>
 
       {uiState.selectedTile && (
