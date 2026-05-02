@@ -293,13 +293,37 @@ class GameEngine {
         gold: this.gold,
         lives: this.lives,
         wave: this.waveIndex + 1,
-        totalWaves: this.totalWaves,
+        maxWave: this.totalWaves,
         waveActive: this.waveActive,
         enemiesKilled: this.enemiesKilled,
         selectedTile: this.selectedTile,
-        speedMultiplier: this.speedMultiplier,
+        towerAtTile: this.selectedTile ? this.getTowerAt(this.selectedTile.x, this.selectedTile.y) : null,
+        isPaused: this.state === 'paused',
+        speed: this.speedMultiplier,
       });
     }
+  }
+
+  getStateSnapshot() {
+    return {
+      state: this.state,
+      gold: this.gold,
+      lives: this.lives,
+      wave: this.waveIndex + 1,
+      maxWave: this.totalWaves,
+      waveActive: this.waveActive,
+      enemiesKilled: this.enemiesKilled,
+      selectedTile: this.selectedTile,
+      towerAtTile: this.selectedTile ? this.getTowerAt(this.selectedTile.x, this.selectedTile.y) : null,
+      isPaused: this.state === 'paused',
+      speed: this.speedMultiplier,
+    };
+  }
+
+  stop() {
+    this.loop.stop();
+    this.state = 'menu';
+    this.selectedTile = null;
   }
 }
 

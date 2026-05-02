@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useState } from 'react';
 import { View, StyleSheet, Dimensions, TouchableWithoutFeedback } from 'react-native';
-import Svg, { Rect, Circle, Path, Polygon, Text as SvgText, G } from 'react-native-svg';
+import Svg, { Rect, Circle, Polygon, Text as SvgText, G } from 'react-native-svg';
 import {
   TILE_SIZE,
   GRID_COLS,
@@ -8,7 +8,6 @@ import {
   BOARD_WIDTH,
   BOARD_HEIGHT,
   COLORS,
-  TOWER_TYPES,
 } from '../constants/gameConfig';
 import engine from '../engine/GameEngine';
 
@@ -40,7 +39,6 @@ function GameBoard({ gameState }) {
 
   const handlePress = useCallback((evt) => {
     const { locationX, locationY } = evt.nativeEvent;
-    // Переводим физические пиксели в tile-координаты с учётом растяжки viewBox
     const tileX = Math.floor((locationX / SCREEN_W) * GRID_COLS);
     const tileY = Math.floor((locationY / SCREEN_H) * GRID_ROWS);
     if (tileX >= 0 && tileX < GRID_COLS && tileY >= 0 && tileY < GRID_ROWS) {
@@ -52,14 +50,6 @@ function GameBoard({ gameState }) {
   const map = engine.buildable;
   const selected = engine.selectedTile;
   const selectedTower = selected ? engine.getTowerAt(selected.x, selected.y) : null;
-
-  const wpPath = engine.waypoints
-    .map((wp, i) => {
-      const x = wp.x * TILE_SIZE + TILE_SIZE / 2;
-      const y = wp.y * TILE_SIZE + TILE_SIZE / 2;
-      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-    })
-    .join(' ');
 
   return (
     <TouchableWithoutFeedback onPress={handlePress}>
@@ -97,9 +87,6 @@ function GameBoard({ gameState }) {
               );
             })
           )}
-
-          {/* Path line */}
-          <Path d={wpPath} stroke="#8b6914" strokeWidth={TILE_SIZE * 0.4} opacity={0.6} />
 
           {/* Selection highlight */}
           {selected && (
