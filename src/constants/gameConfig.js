@@ -2,12 +2,14 @@ import { Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-// Сетка
+// Сетка — логические единицы (40px = 1 tile). Рендер SVG растягивается на весь экран.
 export const GRID_COLS = 12;
 export const GRID_ROWS = 8;
-export const TILE_SIZE = Math.floor(Math.min(width, height * 1.2) / GRID_COLS);
-export const BOARD_WIDTH = GRID_COLS * TILE_SIZE;
-export const BOARD_HEIGHT = GRID_ROWS * TILE_SIZE;
+export const TILE_SIZE = 40;                     // логический размер 1 тайла
+export const BOARD_WIDTH = GRID_COLS * TILE_SIZE;  // 480
+export const BOARD_HEIGHT = GRID_ROWS * TILE_SIZE; // 320
+export const SCREEN_W = width;
+export const SCREEN_H = height;
 
 // Цвета
 export const COLORS = {

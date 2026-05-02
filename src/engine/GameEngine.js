@@ -263,10 +263,12 @@ class GameEngine {
     } else {
       this.selectedTile = null;
     }
+    this._notifyState();
   }
 
   deselectTile() {
     this.selectedTile = null;
+    this._notifyState();
   }
 
   _notifyState() {
