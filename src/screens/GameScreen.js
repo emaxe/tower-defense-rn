@@ -1,77 +1,94 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
   Text,
   TouchableOpacity,
-  Dimensions,
   SafeAreaView,
 } from 'react-native';
-import GameBoard from '../components/GameBoard';
+import { GameEngine } from '../ecs/engine/GameEngine';
+import BoardRenderer from '../ecs/renderers/BoardRenderer';
+import GameLoopSystem from '../ecs/systems/GameLoopSystem';
+import GameManager from '../ecs/GameManager';
 import HUD from '../components/HUD';
 import TowerMenu from '../components/TowerMenu';
-import engine from '../engine/GameEngine';
 import audio from '../audio/AudioManager';
 
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
-
 export default function GameScreen({ onNavigate }) {
-  const [uiState, setUiState] = useState(engine.getStateSnapshot());
-  const [screen, setScreen] = useState('splash'); // splash | playing | gameover
-  const initRef = useRef(false);
+  const gmRef = useRef(new GameManager());
+  const gm = gmRef.current;
 
-  const syncUI = useCallback(() => {
-    setUiState(engine.getStateSnapshot());
-    if (engine.state === 'gameover') {
-      setScreen('gameover');
-    }
-  }, []);
+  const [uiState, setUiState] = useState(gm.getStateSnapshot());
+  const [screen, setScreen] = useState('splash');
 
   useEffect(() => {
-    if (initRef.current) return;
-    initRef.current = true;
+    gm.onStateChange = (snapshot) => {
+      setUiState(snapshot);
+      if (snapshot.state === 'gameover') {
+        setScreen('gameover');
+      } else if (snapshot.state === 'victory') {
+        setScreen('victory');
+      }
+    };
 
-    engine.onStateChange = syncUI;
-
-    // Initialize audio asynchronously without blocking UI
     audio.init().catch(() => {
-      // Audio failure is non-critical; game works without sound
       console.log('Audio init failed, continuing silently');
     });
 
     return () => {
-      engine.onStateChange = null;
+      gm.onStateChange = null;
     };
-  }, [syncUI]);
+  }, [gm]);
 
   const handleStart = useCallback(() => {
-    engine.startGame();
+    gm.startGame();
     setScreen('playing');
-    syncUI();
-  }, [syncUI]);
+  }, [gm]);
 
   const handlePause = useCallback(() => {
-    engine.togglePause();
-    syncUI();
-  }, [syncUI]);
+    gm.togglePause();
+  }, [gm]);
 
   const handleSpeed = useCallback(() => {
-    engine.toggleSpeed();
-    syncUI();
-  }, [syncUI]);
+    gm.toggleSpeed();
+  }, [gm]);
 
   const handleHome = useCallback(() => {
-    engine.stop();
+    gm.stop();
     onNavigate('home');
-  }, [onNavigate]);
+  }, [gm, onNavigate]);
 
   const handleRestart = useCallback(() => {
-    engine.reset();
+    gm.stop();
     setScreen('splash');
-    syncUI();
-  }, [syncUI]);
+  }, [gm]);
 
-  // Splash screen
+  const handleDeselect = useCallback(() => {
+    gm.deselectTile();
+  }, [gm]);
+
+  const handleBuild = useCallback((type, x, y) => {
+    gm.buildTower(type, x, y);
+  }, [gm]);
+
+  const handleUpgrade = useCallback((x, y) => {
+    gm.upgradeTowerAt(x, y);
+  }, [gm]);
+
+  const handleSell = useCallback((x, y) => {
+    gm.sellTowerAt(x, y);
+  }, [gm]);
+
+  const entities = useMemo(() => ({
+    gameManager: gm,
+    board: {
+      renderer: <BoardRenderer />,
+      gameManager: gm,
+    },
+  }), [gm]);
+
+  const running = uiState.state === 'playing';
+
   if (screen === 'splash') {
     return (
       <SafeAreaView style={styles.splashContainer}>
@@ -88,14 +105,32 @@ export default function GameScreen({ onNavigate }) {
     );
   }
 
-  // Game Over screen
   if (screen === 'gameover') {
     return (
       <SafeAreaView style={styles.splashContainer}>
         <View style={styles.splashContent}>
           <Text style={styles.splashTitle}>GAME OVER</Text>
           <Text style={styles.splashSubtitle}>
-            Waves survived: {uiState.wave - 1}
+            Waves survived: {Math.max(0, uiState.wave - 1)}
+          </Text>
+          <TouchableOpacity style={styles.splashButton} onPress={handleRestart}>
+            <Text style={styles.splashButtonText}>PLAY AGAIN</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.splashButton, styles.secondaryButton]} onPress={handleHome}>
+            <Text style={[styles.splashButtonText, styles.secondaryButtonText]}>MAIN MENU</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (screen === 'victory') {
+    return (
+      <SafeAreaView style={styles.splashContainer}>
+        <View style={styles.splashContent}>
+          <Text style={styles.splashTitle}>VICTORY!</Text>
+          <Text style={styles.splashSubtitle}>
+            All waves defeated! Enemies killed: {uiState.enemiesKilled}
           </Text>
           <TouchableOpacity style={styles.splashButton} onPress={handleRestart}>
             <Text style={styles.splashButtonText}>PLAY AGAIN</Text>
@@ -110,26 +145,37 @@ export default function GameScreen({ onNavigate }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.boardContainer}>
-        <GameBoard gameState={uiState} />
+      <View style={styles.boardWrapper}>
+        <GameEngine
+          style={styles.engine}
+          systems={[GameLoopSystem]}
+          entities={entities}
+          running={running}
+        />
       </View>
 
-      <View style={styles.hudOverlay} pointerEvents="box-none">
-        <HUD gameState={uiState} />
-      </View>
-
-      {uiState.selectedTile && (
-        <View style={styles.menuOverlay} pointerEvents="box-none">
-          <TowerMenu
-            gold={uiState.gold}
-            selectedTile={uiState.selectedTile}
-            towerAtTile={uiState.towerAtTile}
-            onBuild={engine.buildTower.bind(engine)}
-            onUpgrade={engine.upgradeTower.bind(engine)}
-            onSell={engine.sellTower.bind(engine)}
+      <View style={styles.uiLayer} pointerEvents="box-none">
+        <View pointerEvents="auto">
+          <HUD
+            gameState={uiState}
+            onPause={handlePause}
+            onSpeed={handleSpeed}
           />
         </View>
-      )}
+
+        {uiState.selectedTile && (
+          <View pointerEvents="auto" style={styles.towerMenuContainer}>
+            <TowerMenu
+              gameState={uiState}
+              onBuild={handleBuild}
+              onUpgrade={handleUpgrade}
+              onSell={handleSell}
+              onDeselect={handleDeselect}
+              canBuild={gm.canBuild.bind(gm)}
+            />
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -139,28 +185,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1a2a1a',
   },
-  boardContainer: {
+  boardWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  engine: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  uiLayer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
+    justifyContent: 'space-between',
   },
-  hudOverlay: {
+  towerMenuContainer: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingTop: 8,
-    paddingHorizontal: 8,
-  },
-  menuOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingBottom: 8,
-    paddingHorizontal: 8,
+    bottom: 16,
+    left: 16,
+    right: 16,
   },
   splashContainer: {
     flex: 1,

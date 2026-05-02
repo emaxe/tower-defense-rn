@@ -1,20 +1,36 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { TOWER_TYPES, TILE_SIZE } from '../constants/gameConfig';
-import engine from '../engine/GameEngine';
+import { getUpgradeCost, getSellValue } from '../entities/Tower';
 
 const MENU_H = 140;
 
-function TowerMenu({ gameState }) {
-  const { selectedTile, gold } = gameState;
+function TowerMenu({ gameState, onBuild, onUpgrade, onSell, onDeselect, canBuild }) {
+  const { selectedTile, gold, towerAtTile } = gameState;
   if (!selectedTile) return null;
 
   const { x, y } = selectedTile;
-  const tower = engine.getTowerAt(x, y);
-  const canBuildHere = engine.canBuild(x, y);
+  const tower = towerAtTile;
+  const canBuildHere = canBuild ? canBuild(x, y) : false;
+
+  const handleUpgrade = () => {
+    onUpgrade && onUpgrade(x, y);
+  };
+
+  const handleSell = () => {
+    onSell && onSell(x, y);
+  };
+
+  const handleBuild = (key) => {
+    onBuild && onBuild(key, x, y);
+  };
+
+  const handleClose = () => {
+    onDeselect && onDeselect();
+  };
 
   return (
-    <View style={[styles.container, { bottom: MENU_H + 20 }]}>
+    <View style={styles.container}>
       <View style={styles.panel}>
         {tower ? (
           <>
@@ -25,18 +41,18 @@ function TowerMenu({ gameState }) {
               {tower.level < 3 && (
                 <TouchableOpacity
                   style={styles.actionBtn}
-                  onPress={() => engine.upgradeTowerAt(x, y)}
+                  onPress={handleUpgrade}
                 >
                   <Text style={styles.btnText}>⬆️ Улучшить</Text>
-                  <Text style={styles.costText}>{engine.getUpgradeCost(tower)} 💰</Text>
+                  <Text style={styles.costText}>{getUpgradeCost(tower)} 💰</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
                 style={[styles.actionBtn, styles.sellBtn]}
-                onPress={() => engine.sellTowerAt(x, y)}
+                onPress={handleSell}
               >
                 <Text style={styles.btnText}>💰 Продать</Text>
-                <Text style={styles.costText}>{engine.getSellValue(tower)} 💰</Text>
+                <Text style={styles.costText}>{getSellValue(tower)} 💰</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -50,7 +66,7 @@ function TowerMenu({ gameState }) {
                   <TouchableOpacity
                     key={key}
                     style={[styles.buildBtn, !affordable && styles.disabledBtn]}
-                    onPress={() => engine.buildTower(key, x, y)}
+                    onPress={() => handleBuild(key)}
                     disabled={!affordable}
                   >
                     <View
@@ -66,7 +82,7 @@ function TowerMenu({ gameState }) {
         ) : (
           <Text style={styles.title}>Здесь нельзя строить</Text>
         )}
-        <TouchableOpacity style={styles.closeBtn} onPress={() => engine.deselectTile()}>
+        <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>
           <Text style={styles.closeText}>❌ Закрыть</Text>
         </TouchableOpacity>
       </View>
@@ -76,17 +92,14 @@ function TowerMenu({ gameState }) {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
     alignItems: 'center',
-    pointerEvents: 'box-none',
   },
   panel: {
     backgroundColor: 'rgba(20,30,20,0.95)',
     borderRadius: 16,
     padding: 12,
     width: '100%',
+    minHeight: 100,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },

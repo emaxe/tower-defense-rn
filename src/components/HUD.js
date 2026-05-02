@@ -1,12 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import engine from '../engine/GameEngine';
 
-function HUD({ gameState }) {
-  const { gold, lives, wave, totalWaves, waveActive, speedMultiplier } = gameState;
+function HUD({ gameState, onPause, onSpeed }) {
+  const { gold, lives, wave, totalWaves, waveActive, speedMultiplier, state } = gameState;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} pointerEvents="box-none">
       <View style={styles.topBar}>
         <View style={styles.stat}>
           <Text style={styles.statIcon}>💰</Text>
@@ -25,18 +24,18 @@ function HUD({ gameState }) {
       </View>
 
       <View style={styles.rightControls}>
-        <TouchableOpacity style={styles.btn} onPress={() => engine.togglePause()}>
-          <Text style={styles.btnText}>{gameState.state === 'paused' ? '▶️' : '⏸️'}</Text>
+        <TouchableOpacity style={styles.btn} onPress={onPause}>
+          <Text style={styles.btnText}>{state === 'paused' ? '▶️' : '⏸️'}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.btn, speedMultiplier === 2 && styles.activeBtn]}
-          onPress={() => engine.setSpeed(speedMultiplier === 1 ? 2 : 1)}
+          onPress={onSpeed}
         >
           <Text style={styles.btnText}>⏩×{speedMultiplier}</Text>
         </TouchableOpacity>
       </View>
 
-      {!waveActive && gameState.state === 'playing' && wave < totalWaves && (
+      {!waveActive && state === 'playing' && wave < totalWaves && (
         <View style={styles.nextWaveBanner}>
           <Text style={styles.nextWaveText}>Волна завершена! Следующая через 2с...</Text>
         </View>
@@ -55,7 +54,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    pointerEvents: 'box-none',
   },
   topBar: {
     flexDirection: 'row',

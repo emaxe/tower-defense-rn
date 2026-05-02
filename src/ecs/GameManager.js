@@ -14,13 +14,14 @@ import { createProjectile, updateProjectile } from '../entities/Projectile';
 import { distance } from '../utils/math';
 import audio from '../audio/AudioManager';
 
-class GameEngine {
+class GameManager {
   constructor() {
     this.reset();
   }
 
   reset() {
-    this.state = 'menu'; // menu | playing | paused | gameover | victory
+    this._clearWaveTimeout();
+    this.state = 'menu';
     this.gold = START_GOLD;
     this.lives = START_LIVES;
     this.waveIndex = -1;
@@ -38,7 +39,6 @@ class GameEngine {
     this.enemiesKilled = 0;
     this.totalWaves = WAVES.length;
     this.onStateChange = null;
-    this.onTick = null;
   }
 
   startGame() {
@@ -73,14 +73,28 @@ class GameEngine {
   togglePause() {
     if (this.state === 'playing') {
       this.state = 'paused';
+      this._clearWaveTimeout();
     } else if (this.state === 'paused') {
       this.state = 'playing';
+      if (!this.waveActive && this.waveIndex >= 0 && this.waveIndex < WAVES.length) {
+        if (this.enemiesToSpawn <= 0 && this.enemies.every((e) => !e.active)) {
+          this.startNextWave();
+        }
+      }
     }
     this._notifyState();
   }
 
   setSpeed(multiplier) {
     this.speedMultiplier = multiplier;
+    this._notifyState();
+  }
+
+  toggleSpeed() {
+    const speeds = [1, 2, 3];
+    const idx = speeds.indexOf(this.speedMultiplier);
+    this.speedMultiplier = speeds[(idx + 1) % speeds.length];
+    this._notifyState();
   }
 
   tick(dt) {
@@ -88,37 +102,33 @@ class GameEngine {
 
     const sdt = dt * this.speedMultiplier;
 
-    // Spawning
     this._updateSpawning(sdt);
-
-    // Movement
     this._updateEnemies(sdt);
-
-    // Towers targeting & shooting
     this._updateTowers(sdt);
-
-    // Projectiles
     this._updateProjectiles(sdt);
 
-    // Check wave complete
     if (this.waveActive && this.enemiesToSpawn <= 0 && this.enemies.every((e) => !e.active)) {
       this.waveActive = false;
-      // Auto-start next wave after 2s
-      setTimeout(() => {
+      this._clearWaveTimeout();
+      this.waveTimeout = setTimeout(() => {
         if (this.state === 'playing' && !this.waveActive) {
           this.startNextWave();
         }
       }, 2000);
     }
 
-    // Check game over
     if (this.lives <= 0) {
       this.state = 'gameover';
       this._play('game_over');
       this._notifyState();
     }
 
-    if (this.onTick) this.onTick();
+    this._cleanupArrays();
+  }
+
+  _cleanupArrays() {
+    this.enemies = this.enemies.filter((e) => e.active);
+    this.projectiles = this.projectiles.filter((p) => p.active);
   }
 
   _play(name) {
@@ -227,7 +237,6 @@ class GameEngine {
     }
   }
 
-  // Building
   canBuild(tileX, tileY) {
     if (tileX < 0 || tileX >= GRID_COLS || tileY < 0 || tileY >= GRID_ROWS) return false;
     return this.buildable[tileY][tileX] && !this.towers.some((t) => t.tileX === tileX && t.tileY === tileY);
@@ -235,7 +244,7 @@ class GameEngine {
 
   buildTower(type, tileX, tileY) {
     const cost = this.getTowerCost(type);
-    if (this.gold < cost || !this.canBuild(tileX, tileY)) return false;
+    if (cost === Infinity || this.gold < cost || !this.canBuild(tileX, tileY)) return false;
     this.gold -= cost;
     this.towers.push(createTower(type, tileX, tileY));
     this._play('build');
@@ -269,6 +278,7 @@ class GameEngine {
   }
 
   getTowerCost(type) {
+    if (!TOWER_TYPES[type]) return Infinity;
     return TOWER_TYPES[type].cost;
   }
 
@@ -288,19 +298,7 @@ class GameEngine {
 
   _notifyState() {
     if (this.onStateChange) {
-      this.onStateChange({
-        state: this.state,
-        gold: this.gold,
-        lives: this.lives,
-        wave: this.waveIndex + 1,
-        totalWaves: this.totalWaves,
-        waveActive: this.waveActive,
-        enemiesKilled: this.enemiesKilled,
-        selectedTile: this.selectedTile,
-        towerAtTile: this.selectedTile ? this.getTowerAt(this.selectedTile.x, this.selectedTile.y) : null,
-        state: this.state,
-        speedMultiplier: this.speedMultiplier,
-      });
+      this.onStateChange(this.getStateSnapshot());
     }
   }
 
@@ -315,16 +313,22 @@ class GameEngine {
       enemiesKilled: this.enemiesKilled,
       selectedTile: this.selectedTile,
       towerAtTile: this.selectedTile ? this.getTowerAt(this.selectedTile.x, this.selectedTile.y) : null,
-      state: this.state,
       speedMultiplier: this.speedMultiplier,
     };
   }
 
+  _clearWaveTimeout() {
+    if (this.waveTimeout) {
+      clearTimeout(this.waveTimeout);
+      this.waveTimeout = null;
+    }
+  }
+
   stop() {
-    this.loop.stop();
+    this._clearWaveTimeout();
     this.state = 'menu';
     this.selectedTile = null;
   }
 }
 
-export default new GameEngine();
+export default GameManager;
