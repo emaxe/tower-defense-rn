@@ -5,6 +5,7 @@ import GameLoop from '../engine/GameLoop';
 import GameBoard from '../components/GameBoard';
 import HUD from '../components/HUD';
 import TowerMenu from '../components/TowerMenu';
+import audio from '../audio/AudioManager';
 
 function GameScreen({ onGameOver, onVictory, onMenu }) {
   const [uiState, setUiState] = useState({
@@ -25,6 +26,7 @@ function GameScreen({ onGameOver, onVictory, onMenu }) {
   });
 
   useEffect(() => {
+    audio.init();
     engine.onStateChange = (newState) => {
       setUiState(newState);
       if (newState.state === 'gameover') {
@@ -41,6 +43,7 @@ function GameScreen({ onGameOver, onVictory, onMenu }) {
     return () => {
       loop.stop();
       engine.onStateChange = null;
+      audio.unload();
     };
   }, []);
 

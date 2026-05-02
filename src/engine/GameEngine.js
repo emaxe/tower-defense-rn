@@ -12,6 +12,7 @@ import { createEnemy, updateEnemy } from '../entities/Enemy';
 import { createTower, upgradeTower, getUpgradeCost, getSellValue } from '../entities/Tower';
 import { createProjectile, updateProjectile } from '../entities/Projectile';
 import { distance } from '../utils/math';
+import audio from '../audio/AudioManager';
 
 class GameEngine {
   constructor() {
@@ -51,6 +52,7 @@ class GameEngine {
     this.waveIndex += 1;
     if (this.waveIndex >= WAVES.length) {
       this.state = 'victory';
+      this._play('victory');
       this._notifyState();
       return;
     }
@@ -64,6 +66,7 @@ class GameEngine {
       this.spawnQueue.push({ type, delay: i * wave.interval });
     }
     this.spawnTimer = 0;
+    this._play('wave_start');
     this._notifyState();
   }
 
@@ -100,8 +103,7 @@ class GameEngine {
     // Check wave complete
     if (this.waveActive && this.enemiesToSpawn <= 0 && this.enemies.every((e) => !e.active)) {
       this.waveActive = false;
-      // Auto-start next wave after 2s (handled by UI timer or auto)
-      // For now require manual start or auto
+      // Auto-start next wave after 2s
       setTimeout(() => {
         if (this.state === 'playing' && !this.waveActive) {
           this.startNextWave();
@@ -112,10 +114,15 @@ class GameEngine {
     // Check game over
     if (this.lives <= 0) {
       this.state = 'gameover';
+      this._play('game_over');
       this._notifyState();
     }
 
     if (this.onTick) this.onTick();
+  }
+
+  _play(name) {
+    audio.play(name).catch(() => {});
   }
 
   _updateSpawning(dt) {
@@ -134,6 +141,7 @@ class GameEngine {
       const result = updateEnemy(enemy, this.waypoints, TILE_SIZE, dt);
       if (result === 'reached_base') {
         this.lives -= 1;
+        this._play('life_loss');
         this._notifyState();
       }
     }
@@ -150,6 +158,7 @@ class GameEngine {
           const dy = target.y - tower.y;
           tower.angle = Math.atan2(dy, dx);
           this.projectiles.push(createProjectile(tower, target, tower.type));
+          this._play('shoot');
           tower.cooldownRemaining = tower.cooldown;
         }
       }
@@ -196,6 +205,10 @@ class GameEngine {
       if (primary && primary.active) affected.push(primary);
     }
 
+    if (affected.length > 0) {
+      this._play('hit');
+    }
+
     for (const enemy of affected) {
       enemy.hp -= damage;
       if (effect) {
@@ -206,6 +219,7 @@ class GameEngine {
       }
       if (enemy.hp <= 0 && enemy.active) {
         enemy.active = false;
+        this._play('enemy_die');
         this.gold += enemy.reward;
         this.enemiesKilled += 1;
         this._notifyState();
@@ -224,6 +238,7 @@ class GameEngine {
     if (this.gold < cost || !this.canBuild(tileX, tileY)) return false;
     this.gold -= cost;
     this.towers.push(createTower(type, tileX, tileY));
+    this._play('build');
     this._notifyState();
     return true;
   }
