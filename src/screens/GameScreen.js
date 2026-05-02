@@ -26,7 +26,9 @@ function GameScreen({ onGameOver, onVictory, onMenu }) {
   });
 
   useEffect(() => {
-    audio.init();
+    // Аудио инициализируем асинхронно, НЕ блокируя старт игры
+    audio.init().catch(() => {});
+
     engine.onStateChange = (newState) => {
       setUiState(newState);
       if (newState.state === 'gameover') {
@@ -49,9 +51,15 @@ function GameScreen({ onGameOver, onVictory, onMenu }) {
 
   return (
     <View style={styles.container}>
-      <GameBoard gameState={uiState} />
-      <HUD gameState={uiState} />
-      <TowerMenu gameState={uiState} />
+      <View style={styles.boardContainer}>
+        <GameBoard gameState={uiState} />
+      </View>
+      <View style={styles.hudContainer}>
+        <HUD gameState={uiState} />
+      </View>
+      <View style={styles.menuContainer}>
+        <TowerMenu gameState={uiState} />
+      </View>
     </View>
   );
 }
@@ -60,6 +68,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a1a0a',
+  },
+  boardContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  hudContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  menuContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 });
 

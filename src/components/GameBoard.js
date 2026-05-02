@@ -65,8 +65,8 @@ function GameBoard({ gameState }) {
     <TouchableWithoutFeedback onPress={handlePress}>
       <View style={styles.container}>
         <Svg
-          width={SCREEN_W}
-          height={SCREEN_H}
+          width="100%"
+          height="100%"
           viewBox={`0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}`}
           preserveAspectRatio="none"
         >
@@ -208,11 +208,7 @@ function GameBoard({ gameState }) {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: SCREEN_W,
-    height: SCREEN_H,
+    flex: 1,
   },
 });
 
