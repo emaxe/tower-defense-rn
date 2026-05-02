@@ -88,6 +88,7 @@ export default function GameScreen({ onNavigate }) {
   }), [gm]);
 
   const running = uiState.state === 'playing';
+  const systems = useMemo(() => [GameLoopSystem], []);
 
   if (screen === 'splash') {
     return (
@@ -148,7 +149,7 @@ export default function GameScreen({ onNavigate }) {
       <View style={styles.boardWrapper}>
         <GameEngine
           style={styles.engine}
-          systems={[GameLoopSystem]}
+          systems={systems}
           entities={entities}
           running={running}
         />

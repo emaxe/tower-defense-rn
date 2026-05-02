@@ -38,7 +38,6 @@ class GameManager {
     this.speedMultiplier = 1;
     this.enemiesKilled = 0;
     this.totalWaves = WAVES.length;
-    this.onStateChange = null;
   }
 
   startGame() {

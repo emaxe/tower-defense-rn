@@ -12,13 +12,13 @@ const { width: INIT_W, height: INIT_H } = Dimensions.get('window');
 
 function BoardRenderer({ gameManager }) {
   const [, forceUpdate] = useState(0);
-  const [dims, setDims] = useState({ width: INIT_W, height: INIT_H });
   const rafRef = useRef(null);
   const mountedRef = useRef(true);
+  const [layout, setLayout] = useState({ width: INIT_W, height: INIT_H });
 
   useEffect(() => {
     const sub = Dimensions.addEventListener('change', ({ window }) => {
-      setDims({ width: window.width, height: window.height });
+      setLayout({ width: window.width, height: window.height });
     });
     return () => sub?.remove();
   }, []);
@@ -44,25 +44,26 @@ function BoardRenderer({ gameManager }) {
     };
   }, [scheduleRender]);
 
-  const tileSizePx = Math.min(dims.width / GRID_COLS, dims.height / GRID_ROWS);
+  const handleLayout = useCallback((evt) => {
+    const { width, height } = evt.nativeEvent.layout;
+    setLayout({ width, height });
+  }, []);
+
+  const tileSizePx = Math.min(layout.width / GRID_COLS, layout.height / GRID_ROWS);
   const boardW = tileSizePx * GRID_COLS;
   const boardH = tileSizePx * GRID_ROWS;
 
   const handlePress = useCallback(
     (evt) => {
       const { locationX, locationY } = evt.nativeEvent;
-      const offsetX = (dims.width - boardW) / 2;
-      const offsetY = (dims.height - boardH) / 2;
-      const localX = locationX - offsetX;
-      const localY = locationY - offsetY;
-      const tileX = Math.floor(localX / tileSizePx);
-      const tileY = Math.floor(localY / tileSizePx);
+      const tileX = Math.floor(locationX / tileSizePx);
+      const tileY = Math.floor(locationY / tileSizePx);
       if (tileX >= 0 && tileX < GRID_COLS && tileY >= 0 && tileY < GRID_ROWS) {
         gameManager.selectTile(tileX, tileY);
         forceUpdate((n) => n + 1);
       }
     },
-    [tileSizePx, boardW, boardH, dims, gameManager]
+    [tileSizePx, gameManager]
   );
 
   const gm = gameManager;
@@ -74,7 +75,7 @@ function BoardRenderer({ gameManager }) {
   const vbH = GRID_ROWS * TILE_SIZE;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={handleLayout}>
       <TouchableWithoutFeedback onPress={handlePress}>
         <View style={{ width: boardW, height: boardH, backgroundColor: '#0d1f0d' }}>
           <Svg width={boardW} height={boardH} viewBox={`0 0 ${vbW} ${vbH}`}>
