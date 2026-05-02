@@ -1,9 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { TOWER_TYPES, TILE_SIZE } from '../constants/gameConfig';
+import { TOWER_TYPES } from '../constants/gameConfig';
 import { getUpgradeCost, getSellValue } from '../entities/Tower';
-
-const MENU_H = 140;
 
 function TowerMenu({ gameState, onBuild, onUpgrade, onSell, onDeselect, canBuild }) {
   const { selectedTile, gold, towerAtTile } = gameState;

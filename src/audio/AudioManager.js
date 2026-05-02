@@ -43,7 +43,7 @@ class AudioManager {
       await sound.stopAsync();
       await sound.setPositionAsync(0);
       await sound.playAsync();
-    } catch (e) {
+    } catch {
       // ignore audio errors
     }
   }

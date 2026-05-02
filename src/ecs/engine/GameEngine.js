@@ -34,7 +34,7 @@ export default function GameEngine({ systems, entities, running, style, children
   const rafRef = useRef(null);
   const lastTimeRef = useRef(null);
   const entitiesRef = useRef(entities);
-  const [, forceUpdate] = useState(0);
+  const [, setTick] = useState(0);
 
   useEffect(() => {
     entitiesRef.current = entities;
@@ -70,6 +70,7 @@ export default function GameEngine({ systems, entities, running, style, children
         entitiesRef.current
       );
       entitiesRef.current = newEntities;
+      setTick((t) => t + 1);
 
       rafRef.current = requestAnimationFrame(tick);
     };
