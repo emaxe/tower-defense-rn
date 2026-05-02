@@ -101,5 +101,5 @@ export const WAVES = [
 ];
 
 // Стартовые ресурсы
-export const START_GOLD = 150;
-export const START_LIVES = 20;
+export const START_GOLD = 300;
+export const START_LIVES = 25;
