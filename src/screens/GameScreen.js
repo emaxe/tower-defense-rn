@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
 } from 'react-native';
-import { GameEngine } from '../ecs/engine/GameEngine';
+import GameEngine from '../ecs/engine/GameEngine';
 import BoardRenderer from '../ecs/renderers/BoardRenderer';
 import GameLoopSystem from '../ecs/systems/GameLoopSystem';
 import GameManager from '../ecs/GameManager';
