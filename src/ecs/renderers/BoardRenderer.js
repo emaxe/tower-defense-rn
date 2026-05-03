@@ -1,12 +1,13 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableWithoutFeedback, Dimensions } from 'react-native';
-import Svg, { Rect, Circle, Polygon, Text as SvgText, G } from 'react-native-svg';
+import Svg, { Rect, Circle, Polygon, Text as SvgText, G, Image as SvgImage } from 'react-native-svg';
 import {
   TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
   COLORS,
 } from '../../constants/gameConfig';
+import { towerSprites, enemySprites, projectileSprites, baseSprite } from '../../assets/spriteMap';
 
 const { width: INIT_W, height: INIT_H } = Dimensions.get('window');
 
@@ -126,42 +127,44 @@ function BoardRenderer({ gameManager }) {
               />
             )}
 
-            {gm.towers?.map((t) => (
-              <G key={t.id}>
-                <Rect
-                  x={t.x - TILE_SIZE * 0.35}
-                  y={t.y - TILE_SIZE * 0.35}
-                  width={TILE_SIZE * 0.7}
-                  height={TILE_SIZE * 0.7}
-                  fill={t.color}
-                  stroke="#222"
-                  strokeWidth={2}
-                  rx={4}
-                />
-                <Polygon
-                  points={`0,-${TILE_SIZE * 0.15} ${TILE_SIZE * 0.25},${TILE_SIZE * 0.1} -${TILE_SIZE * 0.25},${TILE_SIZE * 0.1}`}
-                  fill="#222"
-                  transform={`translate(${t.x},${t.y}) rotate(${(t.angle * 180) / Math.PI + 90})`}
-                />
-                <SvgText
-                  x={t.x}
-                  y={t.y + 4}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize={TILE_SIZE * 0.25}
-                  fontWeight="bold"
-                >
-                  {t.level}
-                </SvgText>
-              </G>
-            ))}
+            {gm.towers?.map((t) => {
+              const size = TILE_SIZE * 0.8;
+              return (
+                <G key={t.id} transform={`translate(${t.x},${t.y}) rotate(${(t.angle * 180) / Math.PI + 90})`}>
+                  <SvgImage
+                    x={-size / 2}
+                    y={-size / 2}
+                    width={size}
+                    height={size}
+                    href={towerSprites[t.type] || towerSprites.basic}
+                  />
+                  <SvgText
+                    x={0}
+                    y={4}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize={TILE_SIZE * 0.25}
+                    fontWeight="bold"
+                  >
+                    {t.level}
+                  </SvgText>
+                </G>
+              );
+            })}
 
             {gm.enemies?.map((e) => {
               if (!e.active) return null;
               const hpPercent = e.hp / e.maxHp;
+              const size = TILE_SIZE * 0.8;
               return (
                 <G key={e.id}>
-                  <Circle cx={e.x} cy={e.y} r={e.radius * TILE_SIZE} fill={e.color} stroke="#222" strokeWidth={1} />
+                  <SvgImage
+                    x={e.x - size / 2}
+                    y={e.y - size / 2}
+                    width={size}
+                    height={size}
+                    href={enemySprites[e.type] || enemySprites.goblin}
+                  />
                   <Rect
                     x={e.x - TILE_SIZE * 0.25}
                     y={e.y - TILE_SIZE * 0.5}
@@ -184,15 +187,15 @@ function BoardRenderer({ gameManager }) {
 
             {gm.projectiles?.map((p) => {
               if (!p.active) return null;
+              const size = TILE_SIZE * 0.3;
               return (
-                <Circle
+                <SvgImage
                   key={p.id}
-                  cx={p.x}
-                  cy={p.y}
-                  r={TILE_SIZE * 0.1}
-                  fill={p.color}
-                  stroke="white"
-                  strokeWidth={1}
+                  x={p.x - size / 2}
+                  y={p.y - size / 2}
+                  width={size}
+                  height={size}
+                  href={projectileSprites[p.type] || projectileSprites.basic}
                 />
               );
             })}
@@ -208,25 +211,15 @@ function BoardRenderer({ gameManager }) {
               const barH = 5;
               const barX = bx - barW / 2;
               const barY = by - TILE_SIZE * 0.55;
+              const size = TILE_SIZE * 0.9;
               return (
                 <G>
-                  {/* Base body */}
-                  <Rect
-                    x={bx - TILE_SIZE * 0.3}
-                    y={by - TILE_SIZE * 0.2}
-                    width={TILE_SIZE * 0.6}
-                    height={TILE_SIZE * 0.4}
-                    fill={COLORS.base}
-                    stroke="#222"
-                    strokeWidth={2}
-                    rx={3}
-                  />
-                  {/* Base roof / top detail */}
-                  <Polygon
-                    points={`${bx},${by - TILE_SIZE * 0.35} ${bx + TILE_SIZE * 0.2},${by - TILE_SIZE * 0.15} ${bx - TILE_SIZE * 0.2},${by - TILE_SIZE * 0.15}`}
-                    fill={COLORS.baseDark}
-                    stroke="#222"
-                    strokeWidth={1}
+                  <SvgImage
+                    x={bx - size / 2}
+                    y={by - size / 2}
+                    width={size}
+                    height={size}
+                    href={baseSprite}
                   />
                   {/* Base HP bar background */}
                   <Rect
@@ -255,7 +248,7 @@ function BoardRenderer({ gameManager }) {
                     fontSize={TILE_SIZE * 0.22}
                     fontWeight="bold"
                   >
-                    🏰
+                    BASE
                   </SvgText>
                 </G>
               );
