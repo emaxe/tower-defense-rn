@@ -55,7 +55,7 @@ export default function GameScreen({ onNavigate }) {
 
   const handleHome = useCallback(() => {
     gm.stop();
-    onNavigate('home');
+    onNavigate('menu');
   }, [gm, onNavigate]);
 
   const handleRestart = useCallback(() => {
