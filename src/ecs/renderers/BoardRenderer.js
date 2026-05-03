@@ -7,7 +7,7 @@ import {
   GRID_ROWS,
   COLORS,
 } from '../../constants/gameConfig';
-import { towerSprites, enemySprites, projectileSprites, baseSprite } from '../../assets/spriteMap';
+import { groundSprites, towerSprites, enemySprites, projectileSprites, baseSprite } from '../../assets/spriteMap';
 
 const { width: INIT_W, height: INIT_H } = Dimensions.get('window');
 
@@ -82,22 +82,19 @@ function BoardRenderer({ gameManager }) {
           <Svg width={boardW} height={boardH} viewBox={`0 0 ${vbW} ${vbH}`}>
             <Rect x={0} y={0} width={vbW} height={vbH} fill="#1a2a1a" />
 
+            {/* Ground tiles */}
             {map.length > 0 && Array.from({ length: GRID_ROWS }).map((_, row) =>
               Array.from({ length: GRID_COLS }).map((_, col) => {
                 const isPath = map[row] ? !map[row][col] : false;
-                const color = isPath
-                  ? (row + col) % 2 === 0 ? COLORS.path : COLORS.pathDark
-                  : (row + col) % 2 === 0 ? COLORS.grass : COLORS.grassDark;
+                const href = isPath ? groundSprites.path : groundSprites.grass;
                 return (
-                  <Rect
-                    key={`${row}-${col}`}
+                  <SvgImage
+                    key={`g-${row}-${col}`}
                     x={col * TILE_SIZE}
                     y={row * TILE_SIZE}
                     width={TILE_SIZE}
                     height={TILE_SIZE}
-                    fill={color}
-                    stroke="rgba(0,0,0,0.1)"
-                    strokeWidth={1}
+                    href={href}
                   />
                 );
               })
