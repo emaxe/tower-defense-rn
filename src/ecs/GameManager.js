@@ -332,6 +332,7 @@ class GameManager {
       waveActive: this.waveActive,
       enemiesKilled: this.enemiesKilled,
       selectedTile: this.selectedTile,
+      towerAtTile: this.selectedTile ? this.getTowerAt(this.selectedTile.x, this.selectedTile.y) : null,
       speedMultiplier: this.speedMultiplier,
       countdownActive: this.countdownActive,
       countdownValue: this.countdownValue,
