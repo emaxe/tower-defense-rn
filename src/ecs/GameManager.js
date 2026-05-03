@@ -14,6 +14,9 @@ import { createProjectile, updateProjectile } from '../entities/Projectile';
 import { distance } from '../utils/math';
 import audio from '../audio/AudioManager';
 
+const FIRST_WAVE_DELAY = 5;
+const INTER_WAVE_DELAY = 5;
+
 class GameManager {
   constructor() {
     this.reset();
@@ -39,12 +42,22 @@ class GameManager {
     this.speedMultiplier = 1;
     this.enemiesKilled = 0;
     this.totalWaves = WAVES.length;
+    this.countdownActive = false;
+    this.countdownValue = 0;
+    this.countdownTotal = 0;
   }
 
   startGame() {
     this.reset();
     this.state = 'playing';
-    this.startNextWave();
+    this.startCountdown(FIRST_WAVE_DELAY);
+    this._notifyState();
+  }
+
+  startCountdown(seconds) {
+    this.countdownActive = true;
+    this.countdownValue = seconds;
+    this.countdownTotal = seconds;
     this._notifyState();
   }
 
@@ -76,11 +89,6 @@ class GameManager {
       this._clearWaveTimeout();
     } else if (this.state === 'paused') {
       this.state = 'playing';
-      if (!this.waveActive && this.waveIndex >= 0 && this.waveIndex < WAVES.length) {
-        if (this.enemiesToSpawn <= 0 && this.enemies.every((e) => !e.active)) {
-          this.startNextWave();
-        }
-      }
     }
     this._notifyState();
   }
@@ -102,6 +110,17 @@ class GameManager {
 
     const sdt = dt * this.speedMultiplier;
 
+    if (this.countdownActive) {
+      this.countdownValue -= sdt;
+      if (this.countdownValue <= 0) {
+        this.countdownActive = false;
+        this.countdownValue = 0;
+        this.startNextWave();
+      }
+      this._notifyState();
+      return;
+    }
+
     this._updateSpawning(sdt);
     this._updateEnemies(sdt);
     this._updateTowers(sdt);
@@ -110,11 +129,7 @@ class GameManager {
     if (this.waveActive && this.enemiesToSpawn <= 0 && this.enemies.every((e) => !e.active)) {
       this.waveActive = false;
       this._clearWaveTimeout();
-      this.waveTimeout = setTimeout(() => {
-        if (this.state === 'playing' && !this.waveActive) {
-          this.startNextWave();
-        }
-      }, 2000);
+      this.startCountdown(INTER_WAVE_DELAY);
     }
 
     if (this.baseHealth <= 0) {
@@ -314,6 +329,9 @@ class GameManager {
       enemiesKilled: this.enemiesKilled,
       selectedTile: this.selectedTile,
       speedMultiplier: this.speedMultiplier,
+      countdownActive: this.countdownActive,
+      countdownValue: this.countdownValue,
+      countdownTotal: this.countdownTotal,
     };
   }
 

@@ -37,12 +37,6 @@ function HUD({ gameState, onPause, onSpeed }) {
           <Text style={styles.btnText}>⏩×{speedMultiplier}</Text>
         </TouchableOpacity>
       </View>
-
-      {!waveActive && state === 'playing' && wave < totalWaves && (
-        <View style={styles.nextWaveBanner}>
-          <Text style={styles.nextWaveText}>Волна завершена! Следующая через 2с...</Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -99,21 +93,6 @@ const styles = StyleSheet.create({
   btnText: {
     color: 'white',
     fontSize: 14,
-  },
-  nextWaveBanner: {
-    position: 'absolute',
-    top: 80,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  nextWaveText: {
-    color: '#ffd700',
-    fontSize: 14,
-    fontWeight: 'bold',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    padding: 6,
-    borderRadius: 8,
   },
 });
 

@@ -12,6 +12,7 @@ import GameLoopSystem from '../ecs/systems/GameLoopSystem';
 import GameManager from '../ecs/GameManager';
 import HUD from '../components/HUD';
 import TowerMenu from '../components/TowerMenu';
+import WaveCountdown from '../components/WaveCountdown';
 import audio from '../audio/AudioManager';
 
 export default function GameScreen({ onNavigate }) {
@@ -156,6 +157,14 @@ export default function GameScreen({ onNavigate }) {
       </View>
 
       <View style={styles.uiLayer} pointerEvents="box-none">
+        {uiState.countdownActive && (
+          <WaveCountdown
+            value={uiState.countdownValue}
+            total={uiState.countdownTotal}
+            wave={uiState.wave}
+          />
+        )}
+
         <View pointerEvents="auto">
           <HUD
             gameState={uiState}
