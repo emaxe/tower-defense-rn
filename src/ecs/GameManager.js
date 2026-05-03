@@ -2,12 +2,9 @@ import {
   TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
-  START_GOLD,
-  BASE_MAX_HEALTH,
-  WAVES,
   TOWER_TYPES,
 } from '../constants/gameConfig';
-import { WAYPOINTS, generateBuildableMap } from '../levels/level1';
+import { generateBuildableMap } from '../levels';
 import { createEnemy, updateEnemy } from '../entities/Enemy';
 import { createTower, upgradeTower, getUpgradeCost, getSellValue } from '../entities/Tower';
 import { createProjectile, updateProjectile } from '../entities/Projectile';
@@ -19,15 +16,24 @@ const INTER_WAVE_DELAY = 5;
 
 class GameManager {
   constructor() {
+    this.levelConfig = null;
     this.reset();
+  }
+
+  setLevel(levelConfig) {
+    this.levelConfig = levelConfig;
   }
 
   reset() {
     this._clearWaveTimeout();
     this.state = 'menu';
-    this.gold = START_GOLD;
-    this.baseHealth = BASE_MAX_HEALTH;
-    this.baseMaxHealth = BASE_MAX_HEALTH;
+    const cfg = this.levelConfig || {};
+    this.gold = cfg.startGold ?? 300;
+    this.baseHealth = cfg.baseMaxHealth ?? 100;
+    this.baseMaxHealth = cfg.baseMaxHealth ?? 100;
+    this.waves = cfg.waves || [];
+    this.waypoints = cfg.waypoints || [];
+    this.buildable = this.waypoints.length > 0 ? generateBuildableMap(this.waypoints) : [];
     this.waveIndex = -1;
     this.waveActive = false;
     this.enemiesToSpawn = 0;
@@ -36,12 +42,10 @@ class GameManager {
     this.enemies = [];
     this.towers = [];
     this.projectiles = [];
-    this.waypoints = WAYPOINTS;
-    this.buildable = generateBuildableMap();
     this.selectedTile = null;
     this.speedMultiplier = 1;
     this.enemiesKilled = 0;
-    this.totalWaves = WAVES.length;
+    this.totalWaves = this.waves.length;
     this.countdownActive = false;
     this.countdownValue = 0;
     this.countdownTotal = 0;
@@ -63,14 +67,14 @@ class GameManager {
 
   startNextWave() {
     this.waveIndex += 1;
-    if (this.waveIndex >= WAVES.length) {
+    if (this.waveIndex >= this.waves.length) {
       this.state = 'victory';
       this._play('victory');
       this._notifyState();
       return;
     }
 
-    const wave = WAVES[this.waveIndex];
+    const wave = this.waves[this.waveIndex];
     this.waveActive = true;
     this.enemiesToSpawn = wave.count;
     this.spawnQueue = [];

@@ -15,9 +15,13 @@ import TowerMenu from '../components/TowerMenu';
 import WaveCountdown from '../components/WaveCountdown';
 import audio from '../audio/AudioManager';
 
-export default function GameScreen({ onNavigate }) {
+export default function GameScreen({ onNavigate, levelConfig }) {
   const gmRef = useRef(new GameManager());
   const gm = gmRef.current;
+
+  if (levelConfig) {
+    gm.setLevel(levelConfig);
+  }
 
   const [uiState, setUiState] = useState(gm.getStateSnapshot());
   const [screen, setScreen] = useState('splash');
