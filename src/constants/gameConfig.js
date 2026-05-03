@@ -23,6 +23,10 @@ export const COLORS = {
   basicTower: '#4488cc',
   iceTower: '#44ccdd',
   bombTower: '#cc4444',
+  base: '#4a6fa5',
+  baseDark: '#3a5f95',
+  baseHpBar: '#ff4444',
+  baseHpBg: '#333333',
   enemyGoblin: '#cc4444',
   enemyOrc: '#884444',
   enemyBoss: '#aa2222',
@@ -69,6 +73,7 @@ export const ENEMY_TYPES = {
     reward: 10,
     radius: 0.3,
     color: COLORS.enemyGoblin,
+    baseDamage: 5,
   },
   orc: {
     hp: 80,
@@ -76,6 +81,7 @@ export const ENEMY_TYPES = {
     reward: 20,
     radius: 0.4,
     color: COLORS.enemyOrc,
+    baseDamage: 10,
   },
   boss: {
     hp: 300,
@@ -83,6 +89,7 @@ export const ENEMY_TYPES = {
     reward: 100,
     radius: 0.55,
     color: COLORS.enemyBoss,
+    baseDamage: 25,
   },
 };
 
@@ -102,4 +109,4 @@ export const WAVES = [
 
 // Стартовые ресурсы
 export const START_GOLD = 300;
-export const START_LIVES = 25;
+export const BASE_MAX_HEALTH = 100;

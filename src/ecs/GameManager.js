@@ -3,7 +3,7 @@ import {
   GRID_COLS,
   GRID_ROWS,
   START_GOLD,
-  START_LIVES,
+  BASE_MAX_HEALTH,
   WAVES,
   TOWER_TYPES,
 } from '../constants/gameConfig';
@@ -23,7 +23,8 @@ class GameManager {
     this._clearWaveTimeout();
     this.state = 'menu';
     this.gold = START_GOLD;
-    this.lives = START_LIVES;
+    this.baseHealth = BASE_MAX_HEALTH;
+    this.baseMaxHealth = BASE_MAX_HEALTH;
     this.waveIndex = -1;
     this.waveActive = false;
     this.enemiesToSpawn = 0;
@@ -116,7 +117,7 @@ class GameManager {
       }, 2000);
     }
 
-    if (this.lives <= 0) {
+    if (this.baseHealth <= 0) {
       this.state = 'gameover';
       this._play('game_over');
       this._notifyState();
@@ -149,7 +150,7 @@ class GameManager {
     for (const enemy of this.enemies) {
       const result = updateEnemy(enemy, this.waypoints, TILE_SIZE, dt);
       if (result === 'reached_base') {
-        this.lives -= 1;
+        this.baseHealth -= enemy.damageToBase;
         this._play('life_loss');
         this._notifyState();
       }
@@ -305,13 +306,13 @@ class GameManager {
     return {
       state: this.state,
       gold: this.gold,
-      lives: this.lives,
+      baseHealth: this.baseHealth,
+      baseMaxHealth: this.baseMaxHealth,
       wave: this.waveIndex + 1,
       totalWaves: this.totalWaves,
       waveActive: this.waveActive,
       enemiesKilled: this.enemiesKilled,
       selectedTile: this.selectedTile,
-      towerAtTile: this.selectedTile ? this.getTowerAt(this.selectedTile.x, this.selectedTile.y) : null,
       speedMultiplier: this.speedMultiplier,
     };
   }

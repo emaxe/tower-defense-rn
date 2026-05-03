@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 function HUD({ gameState, onPause, onSpeed }) {
-  const { gold, lives, wave, totalWaves, waveActive, speedMultiplier, state } = gameState;
+  const { gold, baseHealth, baseMaxHealth, wave, totalWaves, waveActive, speedMultiplier, state } = gameState;
+  const baseHpPercent = baseMaxHealth > 0 ? (baseHealth || 0) / baseMaxHealth : 0;
 
   return (
     <View style={styles.container} pointerEvents="box-none">
@@ -12,8 +13,10 @@ function HUD({ gameState, onPause, onSpeed }) {
           <Text style={styles.statText}>{gold}</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={styles.statIcon}>❤️</Text>
-          <Text style={[styles.statText, lives <= 5 && styles.danger]}>{lives}</Text>
+          <Text style={styles.statIcon}>🏰</Text>
+          <Text style={[styles.statText, baseHpPercent <= 0.25 && styles.danger]}>
+            {baseHealth}/{baseMaxHealth}
+          </Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statIcon}>🌊</Text>

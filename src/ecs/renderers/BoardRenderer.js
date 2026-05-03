@@ -196,6 +196,70 @@ function BoardRenderer({ gameManager }) {
                 />
               );
             })}
+
+            {/* Base rendering */}
+            {(() => {
+              const lastWp = gm.waypoints[gm.waypoints.length - 1];
+              if (!lastWp) return null;
+              const bx = lastWp.x * TILE_SIZE + TILE_SIZE / 2;
+              const by = lastWp.y * TILE_SIZE + TILE_SIZE / 2;
+              const baseHpPercent = Math.max(0, (gm.baseHealth || 0) / (gm.baseMaxHealth || 1));
+              const barW = TILE_SIZE * 0.8;
+              const barH = 5;
+              const barX = bx - barW / 2;
+              const barY = by - TILE_SIZE * 0.55;
+              return (
+                <G>
+                  {/* Base body */}
+                  <Rect
+                    x={bx - TILE_SIZE * 0.3}
+                    y={by - TILE_SIZE * 0.2}
+                    width={TILE_SIZE * 0.6}
+                    height={TILE_SIZE * 0.4}
+                    fill={COLORS.base}
+                    stroke="#222"
+                    strokeWidth={2}
+                    rx={3}
+                  />
+                  {/* Base roof / top detail */}
+                  <Polygon
+                    points={`${bx},${by - TILE_SIZE * 0.35} ${bx + TILE_SIZE * 0.2},${by - TILE_SIZE * 0.15} ${bx - TILE_SIZE * 0.2},${by - TILE_SIZE * 0.15}`}
+                    fill={COLORS.baseDark}
+                    stroke="#222"
+                    strokeWidth={1}
+                  />
+                  {/* Base HP bar background */}
+                  <Rect
+                    x={barX}
+                    y={barY}
+                    width={barW}
+                    height={barH}
+                    fill={COLORS.baseHpBg}
+                    rx={2}
+                  />
+                  {/* Base HP bar fill */}
+                  <Rect
+                    x={barX}
+                    y={barY}
+                    width={barW * baseHpPercent}
+                    height={barH}
+                    fill={baseHpPercent > 0.5 ? '#4caf50' : baseHpPercent > 0.25 ? '#ff9800' : '#f44336'}
+                    rx={2}
+                  />
+                  {/* Base label */}
+                  <SvgText
+                    x={bx}
+                    y={by + 4}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize={TILE_SIZE * 0.22}
+                    fontWeight="bold"
+                  >
+                    🏰
+                  </SvgText>
+                </G>
+              );
+            })()}
           </Svg>
         </View>
       </TouchableWithoutFeedback>

@@ -14,6 +14,7 @@ export function createEnemy(type, waypoints, tileSize) {
     radius: config.radius,
     color: config.color,
     reward: config.reward,
+    damageToBase: config.baseDamage || 5,
     pathProgress: 0,
     active: true,
     effects: {},
