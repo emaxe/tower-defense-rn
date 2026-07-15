@@ -1,13 +1,13 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableWithoutFeedback, Dimensions } from 'react-native';
-import Svg, { Rect, Circle, Polygon, Text as SvgText, G, Image as SvgImage } from 'react-native-svg';
+import Svg, { Rect, Circle, Polygon, Text as SvgText, G, Image as SvgImage, Line, Defs, RadialGradient, Stop } from 'react-native-svg';
 import {
   TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
   COLORS,
 } from '../../constants/gameConfig';
-import { groundSprites, towerSprites, enemySprites, projectileSprites, baseSprite } from '../../assets/spriteMap';
+import { groundSprites, towerSprites, towerBaseSprites, enemySprites, projectileSprites, baseSprite } from '../../assets/spriteMap';
 
 const { width: INIT_W, height: INIT_H } = Dimensions.get('window');
 
@@ -80,25 +80,94 @@ function BoardRenderer({ gameManager }) {
       <TouchableWithoutFeedback onPress={handlePress}>
         <View style={{ width: boardW, height: boardH, backgroundColor: '#0d1f0d' }}>
           <Svg width={boardW} height={boardH} viewBox={`0 0 ${vbW} ${vbH}`}>
+            <Defs>
+              <RadialGradient id="hitFlashGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                <Stop offset="0%" stopColor="#ff5555" stopOpacity="0.55" />
+                <Stop offset="65%" stopColor="#ff0000" stopOpacity="0.15" />
+                <Stop offset="100%" stopColor="#ff0000" stopOpacity="0" />
+              </RadialGradient>
+            </Defs>
             <Rect x={0} y={0} width={vbW} height={vbH} fill="#1a2a1a" />
 
-            {/* Ground tiles */}
+            {/* Ground tiles (grass everywhere, path drawn as overlay) */}
             {map.length > 0 && Array.from({ length: GRID_ROWS }).map((_, row) =>
-              Array.from({ length: GRID_COLS }).map((_, col) => {
-                const isPath = map[row] ? !map[row][col] : false;
-                const href = isPath ? groundSprites.path : groundSprites.grass;
-                return (
-                  <SvgImage
-                    key={`g-${row}-${col}`}
-                    x={col * TILE_SIZE}
-                    y={row * TILE_SIZE}
-                    width={TILE_SIZE}
-                    height={TILE_SIZE}
-                    href={href}
-                  />
-                );
-              })
+              Array.from({ length: GRID_COLS }).map((_, col) => (
+                <SvgImage
+                  key={`g-${row}-${col}`}
+                  x={col * TILE_SIZE}
+                  y={row * TILE_SIZE}
+                  width={TILE_SIZE}
+                  height={TILE_SIZE}
+                  href={groundSprites.grass}
+                />
+              ))
             )}
+
+            {/* Road path overlay */}
+            {(() => {
+              const pathCoords = [];
+              for (let r = 0; r < GRID_ROWS; r++) {
+                for (let c = 0; c < GRID_COLS; c++) {
+                  if (map[r] && !map[r][c]) {
+                    pathCoords.push({ x: c, y: r });
+                  }
+                }
+              }
+
+              const nodes = new Set(pathCoords.map((p) => `${p.x},${p.y}`));
+              const cx = (c) => c * TILE_SIZE + TILE_SIZE / 2;
+              const cy = (r) => r * TILE_SIZE + TILE_SIZE / 2;
+              const R = TILE_SIZE * 0.42;
+              const SW = TILE_SIZE * 0.84;
+              const roadColor = '#B8894A';
+
+              const lines = [];
+              pathCoords.forEach((p, i) => {
+                const right = nodes.has(`${p.x + 1},${p.y}`);
+                const down = nodes.has(`${p.x},${p.y + 1}`);
+                if (right) {
+                  lines.push(
+                    <Line
+                      key={`h-${p.x}-${p.y}`}
+                      x1={cx(p.x)}
+                      y1={cy(p.y)}
+                      x2={cx(p.x + 1)}
+                      y2={cy(p.y)}
+                      stroke={roadColor}
+                      strokeWidth={SW}
+                      strokeLinecap="round"
+                    />
+                  );
+                }
+                if (down) {
+                  lines.push(
+                    <Line
+                      key={`v-${p.x}-${p.y}`}
+                      x1={cx(p.x)}
+                      y1={cy(p.y)}
+                      x2={cx(p.x)}
+                      y2={cy(p.y + 1)}
+                      stroke={roadColor}
+                      strokeWidth={SW}
+                      strokeLinecap="round"
+                    />
+                  );
+                }
+              });
+
+              return [
+                ...lines,
+                ...pathCoords.map((p) => (
+                  <Circle
+                    key={`n-${p.x}-${p.y}`}
+                    cx={cx(p.x)}
+                    cy={cy(p.y)}
+                    r={R}
+                    fill={roadColor}
+                  />
+                )),
+              ];
+            })()}
 
             {selected && (
               <Rect
@@ -126,15 +195,28 @@ function BoardRenderer({ gameManager }) {
 
             {gm.towers?.map((t) => {
               const size = TILE_SIZE * 0.8;
+              const turretSize = TILE_SIZE * 0.65;
+              const towerAngle = (t.angle * 180) / Math.PI;
               return (
-                <G key={t.id} transform={`translate(${t.x},${t.y}) rotate(${(t.angle * 180) / Math.PI + 90})`}>
+                <G key={t.id} transform={`translate(${t.x},${t.y})`}>
+                  {/* Tower base — static platform */}
                   <SvgImage
                     x={-size / 2}
                     y={-size / 2}
                     width={size}
                     height={size}
-                    href={towerSprites[t.type] || towerSprites.basic}
+                    href={towerBaseSprites[t.type] || towerBaseSprites.basic}
                   />
+                  {/* Tower turret — rotates toward target */}
+                  <G transform={`rotate(${towerAngle})`}>
+                    <SvgImage
+                      x={-turretSize / 2}
+                      y={-turretSize / 2}
+                      width={turretSize}
+                      height={turretSize}
+                      href={towerSprites[t.type] || towerSprites.basic}
+                    />
+                  </G>
                   <SvgText
                     x={0}
                     y={4}
@@ -153,25 +235,43 @@ function BoardRenderer({ gameManager }) {
               if (!e.active) return null;
               const hpPercent = e.hp / e.maxHp;
               const size = TILE_SIZE * 0.8;
+              const enemyAngle = (e.angle * 180) / Math.PI;
+              const bob = Math.sin(e.pathProgress * Math.PI * 2 * 6) * 3;
+              const scale = e.spawnScale ?? 1;
               return (
                 <G key={e.id}>
-                  <SvgImage
-                    x={e.x - size / 2}
-                    y={e.y - size / 2}
-                    width={size}
-                    height={size}
-                    href={enemySprites[e.type] || enemySprites.goblin}
-                  />
+                  {/* Enemy sprite with bobbing, rotation and spawn scale */}
+                  <G transform={`translate(${e.x},${e.y + bob})`}>
+                    <G transform={`rotate(${enemyAngle}) scale(${scale})`}>
+                      <SvgImage
+                        x={-size / 2}
+                        y={-size / 2}
+                        width={size}
+                        height={size}
+                        href={enemySprites[e.type] || enemySprites.goblin}
+                      />
+                      {e.hitFlash > 0 && (
+                        <Circle
+                          cx={0}
+                          cy={0}
+                          r={size * 0.42}
+                          fill="url(#hitFlashGrad)"
+                          opacity={Math.min(0.9, e.hitFlash * 6)}
+                        />
+                      )}
+                    </G>
+                  </G>
+                  {/* HP bar stays upright, no rotation */}
                   <Rect
                     x={e.x - TILE_SIZE * 0.25}
-                    y={e.y - TILE_SIZE * 0.5}
+                    y={e.y - TILE_SIZE * 0.5 + bob}
                     width={TILE_SIZE * 0.5 * hpPercent}
                     height={4}
                     fill={hpPercent > 0.5 ? '#4caf50' : hpPercent > 0.25 ? '#ff9800' : '#f44336'}
                   />
                   <Rect
                     x={e.x - TILE_SIZE * 0.25}
-                    y={e.y - TILE_SIZE * 0.5}
+                    y={e.y - TILE_SIZE * 0.5 + bob}
                     width={TILE_SIZE * 0.5}
                     height={4}
                     fill="none"

@@ -18,6 +18,9 @@ export function createEnemy(type, waypoints, tileSize) {
     pathProgress: 0,
     active: true,
     effects: {},
+    angle: 0,
+    hitFlash: 0,
+    spawnScale: 0.3,
   };
 }
 
@@ -33,6 +36,10 @@ export function updateEnemy(enemy, waypoints, tileSize, dt) {
     }
   }
 
+  // Animations
+  enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
+  enemy.spawnScale = Math.min(1, enemy.spawnScale + dt * 3);
+
   const wpIndex = Math.floor(enemy.pathProgress);
   if (wpIndex >= waypoints.length - 1) {
     enemy.active = false;
@@ -45,6 +52,8 @@ export function updateEnemy(enemy, waypoints, tileSize, dt) {
   const ay = a.y * tileSize + tileSize / 2;
   const bx = b.x * tileSize + tileSize / 2;
   const by = b.y * tileSize + tileSize / 2;
+
+  enemy.angle = Math.atan2(by - ay, bx - ax);
 
   const segLen = Math.sqrt((bx - ax) ** 2 + (by - ay) ** 2);
   const segProgress = enemy.pathProgress - wpIndex;

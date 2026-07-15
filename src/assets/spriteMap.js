@@ -5,25 +5,30 @@
 
 export const groundSprites = {
   grass: require('../../assets/sprites/raw/kenney-default/towerDefense_tile038.png'),
-  path:  require('../../assets/sprites/raw/kenney-default/towerDefense_tile001.png'),
 };
 
 export const towerSprites = {
-  basic: require('../../assets/sprites/raw/kenney-default/towerDefense_tile180.png'),
-  ice:   require('../../assets/sprites/raw/kenney-default/towerDefense_tile181.png'),
-  bomb:  require('../../assets/sprites/raw/kenney-default/towerDefense_tile182.png'),
+  basic: require('../../assets/sprites/custom/turret_archer.png'),
+  ice:   require('../../assets/sprites/custom/tower_mage.png'),
+  bomb:  require('../../assets/sprites/raw/kenney-default/towerDefense_tile291.png'),
+};
+
+export const towerBaseSprites = {
+  basic: require('../../assets/sprites/custom/base_archer.png'),
+  ice:   require('../../assets/sprites/custom/base_archer.png'), // TODO: replace with base_mage.png when ready
+  bomb:  require('../../assets/sprites/raw/kenney-default/towerDefense_tile291.png'),
 };
 
 export const enemySprites = {
-  goblin: require('../../assets/sprites/raw/kenney-default/towerDefense_tile204.png'),
-  orc:    require('../../assets/sprites/raw/kenney-default/towerDefense_tile205.png'),
-  boss:   require('../../assets/sprites/raw/kenney-default/towerDefense_tile208.png'),
+  goblin: require('../../assets/sprites/raw/kenney-default/towerDefense_tile245.png'),
+  orc:    require('../../assets/sprites/raw/kenney-default/towerDefense_tile249.png'),
+  boss:   require('../../assets/sprites/raw/kenney-default/towerDefense_tile249.png'),
 };
 
 export const projectileSprites = {
-  basic: require('../../assets/sprites/raw/kenney-default/towerDefense_tile225.png'),
-  ice:   require('../../assets/sprites/raw/kenney-default/towerDefense_tile226.png'),
-  bomb:  require('../../assets/sprites/raw/kenney-default/towerDefense_tile227.png'),
+  basic: require('../../assets/sprites/raw/kenney-default/towerDefense_tile290.png'),
+  ice:   require('../../assets/sprites/raw/kenney-default/towerDefense_tile292.png'),
+  bomb:  require('../../assets/sprites/raw/kenney-default/towerDefense_tile248.png'),
 };
 
-export const baseSprite = require('../../assets/sprites/raw/kenney-default/towerDefense_tile130.png');
+export const baseSprite = require('../../assets/sprites/custom/base.png');

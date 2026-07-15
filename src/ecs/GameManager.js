@@ -240,6 +240,7 @@ class GameManager {
 
     for (const enemy of affected) {
       enemy.hp -= damage;
+      enemy.hitFlash = 0.15;
       if (effect) {
         enemy.effects[effect.type] = {
           factor: effect.factor,
